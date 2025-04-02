@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube থাম্বনেইল ডাউনলোডার</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* সাধারণ স্টাইল */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Hind Siliguri', 'Bangla', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        /* কন্টেইনার স্টাইল */
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .container:hover {
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        /* হেডিং স্টাইল */
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        /* ইনপুট গ্রুপ স্টাইল */
+        .input-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background-color: #f8f9fa;
+        }
+
+        input[type="text"]:focus {
+            border-color: #4285f4;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+            background-color: #fff;
+        }
+
+        /* প্রিভিউ বক্স স্টাইল */
+        .preview-box {
+            border: 2px dashed #95a5a6;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s;
+            background-color: #f8f9fa;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-box.active {
+            border-color: #4285f4;
+            background-color: #eaf2ff;
+        }
+
+        .preview-box img {
+            max-width: 100%;
+            max-height: 280px;
+            border-radius: 8px;
+            display: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-box .icon {
+            font-size: 60px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .preview-box.active .icon {
+            color: #4285f4;
+        }
+
+        .preview-box .text {
+            color: #7f8c8d;
+            font-size: 17px;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        /* কোয়ালিটি অপশন স্টাইল */
+        .quality-options {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .quality-btn {
+            padding: 10px 18px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: #34495e;
+            font-size: 14px;
+            flex-grow: 1;
+            max-width: 150px;
+        }
+
+        .quality-btn:hover {
+            border-color: #4285f4;
+            color: #4285f4;
+        }
+
+        .quality-btn.active {
+            border-color: #4285f4;
+            background: #eaf2ff;
+            color: #4285f4;
+            font-weight: 600;
+        }
+
+        /* বাটন স্টাইল */
+        .btn {
+            background: linear-gradient(to right, #4285f4, #34a853);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 17px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* লোডিং স্টাইল */
+        .loading {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 10;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+        }
+
+        .loading.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4285f4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #4285f4;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        /* রেস্পন্সিভ ডিজাইন */
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+            
+            .preview-box {
+                padding: 20px;
+                min-height: 220px;
+            }
+            
+            .quality-btn {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            
+            .btn {
+                padding: 13px 25px;
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .preview-box .icon {
+                font-size: 50px;
+            }
+            
+            .preview-box .text {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fab fa-youtube" style="color: #ff0000; margin-right: 10px;"></i> YouTube থাম্বনেইল ডাউনলোডার</h1>
+        
+        <div class="input-group">
+            <label for="video-url"><i class="fas fa-link" style="margin-right: 8px;"></i> YouTube ভিডিও লিংক পেস্ট করুন:</label>
+            <input type="text" id="video-url" placeholder="যেমন: https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+        </div>
+        
+        <div class="quality-options">
+            <button class="quality-btn active" data-quality="maxresdefault">
+                <i class="fas fa-crown" style="margin-right: 5px;"></i> সর্বোচ্চ মান
+            </button>
+            <button class="quality-btn" data-quality="hqdefault">
+                <i class="fas fa-star" style="margin-right: 5px;"></i> উচ্চ মান
+            </button>
+            <button class="quality-btn" data-quality="mqdefault">
+                <i class="fas fa-image" style="margin-right: 5px;"></i> মধ্যম মান
+            </button>
+        </div>
+        
+        <div class="preview-box">
+            <div class="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">থাম্বনেইল লোড হচ্ছে...</div>
+            </div>
+            <i class="icon fas fa-cloud-download-alt"></i>
+            <span class="text">YouTube ভিডিও লিংক পেস্ট করলে থাম্বনেইল এখানে দেখানো হবে</span>
+            <img id="thumbnail-preview" alt="YouTube থাম্বনেইল প্রিভিউ">
+        </div>
+        
+        <button class="btn" id="download-btn" disabled>
+            <i class="fas fa-download" style="margin-right: 8px;"></i> থাম্বনেইল ডাউনলোড করুন
+        </button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlInput = document.getElementById('video-url');
+            const previewBox = document.querySelector('.preview-box');
+            const thumbnailImg = document.getElementById('thumbnail-preview');
+            const downloadBtn = document.getElementById('download-btn');
+            const qualityBtns = document.querySelectorAll('.quality-btn');
+            const loadingElement = document.querySelector('.loading');
+            
+            let currentQuality = 'maxresdefault';
+            let currentThumbnailUrl = '';
+            let currentVideoId = '';
+            
+            // কোয়ালিটি বাটন হ্যান্ডলার
+            qualityBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    qualityBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentQuality = this.dataset.quality;
+                    
+                    // নতুন কোয়ালিটি অনুযায়ী থাম্বনেইল আপডেট করুন
+                    if (currentVideoId) {
+                        updateThumbnail(currentVideoId);
+                    }
+                });
+            });
+            
+            // URL ইনপুট হ্যান্ডলার
+            urlInput.addEventListener('input', function() {
+                const url = this.value.trim();
+                
+                if (url === '') {
+                    resetPreview();
+                    return;
+                }
+                
+                extractVideoId(url);
+            });
+            
+            // ডাউনলোড বাটন হ্যান্ডলার
+            downloadBtn.addEventListener('click', function() {
+                if (currentThumbnailUrl) {
+                    downloadImage(currentThumbnailUrl);
+                }
+            });
+            
+            // ভিডিও আইডি এক্সট্রাক্ট ফাংশন
+            function extractVideoId(url) {
+                let videoId = '';
+                
+                // YouTube URL থেকে ভিডিও আইডি বের করুন
+                if (url.includes('youtube.com/watch?v=')) {
+                    const match = url.match(/[?&]v=([^&]+)/);
+                    if (match && match[1]) {
+                        videoId = match[1].substring(0, 11);
+                    }
+                } else if (url.includes('youtu.be/')) {
+                    const match = url.match(/youtu\.be\/([^\/\?]+)/);
+                    if (match && match[1]) {
+                        videoId = match[1].substring(0, 11);
+                    }
+                } else if (url.includes('youtube.com/shorts/')) {
+                    const match = url.match(/shorts\/([^\/\?]+)/);
+                    if (match && match[1]) {
+                        videoId = match[1].substring(0, 11);
+                    }
+                }
+                
+                if (videoId) {
+                    currentVideoId = videoId;
+                    updateThumbnail(videoId);
+                } else {
+                    resetPreview();
+                    showError('অবৈধ YouTube লিংক! সঠিক লিংক দিন।');
+                }
+            }
+            
+            // থাম্বনেইল আপডেট ফাংশন
+            function updateThumbnail(videoId) {
+                showLoading();
+                
+                const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/${currentQuality}.jpg`;
+                currentThumbnailUrl = thumbnailUrl;
+                
+                // প্রিভিউ আপডেট করুন
+                thumbnailImg.src = thumbnailUrl;
+                
+                thumbnailImg.onload = function() {
+                    hideLoading();
+                    previewBox.classList.add('active');
+                    thumbnailImg.style.display = 'block';
+                    document.querySelector('.preview-box .icon').style.display = 'none';
+                    document.querySelector('.preview-box .text').style.display = 'none';
+                    
+                    // ডাউনলোড বাটন সক্রিয় করুন
+                    downloadBtn.disabled = false;
+                };
+                
+                thumbnailImg.onerror = function() {
+                    // যদি সর্বোচ্চ রেজোলিউশনের থাম্বনেইল না পাওয়া যায়
+                    if (currentQuality === 'maxresdefault') {
+                        const fallbackUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                        thumbnailImg.src = fallbackUrl;
+                        currentThumbnailUrl = fallbackUrl;
+                    } else {
+                        hideLoading();
+                        resetPreview();
+                        showError('দুঃখিত, এই ভিডিওর থাম্বনেইল পাওয়া যায়নি। অন্য লিংক চেষ্টা করুন।');
+                    }
+                };
+            }
+            
+            // প্রিভিউ রিসেট ফাংশন
+            function resetPreview() {
+                previewBox.classList.remove('active');
+                thumbnailImg.style.display = 'none';
+                document.querySelector('.preview-box .icon').style.display = 'block';
+                document.querySelector('.preview-box .text').style.display = 'block';
+                downloadBtn.disabled = true;
+                currentThumbnailUrl = '';
+                currentVideoId = '';
+            }
+            
+            // ইমেজ ডাউনলোড ফাংশন
+            function downloadImage(url) {
+                // একটি অদৃশ্য <a> ট্যাগ তৈরি করে ডাউনলোড শুরু করুন
+                const link = document.createElement('a');
+                link.href = url;
+                
+                // ডাউনলোড করার জন্য ফাইল নাম সেট করুন
+                const timestamp = new Date().getTime();
+                link.download = `youtube-thumbnail-${currentVideoId}-${currentQuality}-${timestamp}.jpg`;
+                
+                // ডকুমেন্টে অ্যাড করে ক্লিক ইভেন্ট ট্রিগার করুন
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // ডাউনলোড নোটিফিকেশন
+                showNotification('থাম্বনেইল ডাউনলোড শুরু হয়েছে!');
+            }
+            
+            // লোডিং স্টেট ফাংশন
+            function showLoading() {
+                loadingElement.classList.add('active');
+            }
+            
+            function hideLoading() {
+                loadingElement.classList.remove('active');
+            }
+            
+            // এরর শো ফাংশন
+            function showError(message) {
+                const notification = document.createElement('div');
+                notification.style.position = 'fixed';
+                notification.style.top = '20px';
+                notification.style.left = '50%';
+                notification.style.transform = 'translateX(-50%)';
+                notification.style.backgroundColor = '#e74c3c';
+                notification.style.color = 'white';
+                notification.style.padding = '12px 20px';
+                notification.style.borderRadius = '5px';
+                notification.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+                notification.style.zIndex = '1000';
+                notification.style.animation = 'fadeIn 0.3s';
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.animation = 'fadeOut 0.3s';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+            }
+            
+            // নোটিফিকেশন ফাংশন
+            function showNotification(message) {
+                const notification = document.createElement('div');
+                notification.style.position = 'fixed';
+                notification.style.top = '20px';
+                notification.style.left = '50%';
+                notification.style.transform = 'translateX(-50%)';
+                notification.style.backgroundColor = '#2ecc71';
+                notification.style.color = 'white';
+                notification.style.padding = '12px 20px';
+                notification.style.borderRadius = '5px';
+                notification.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+                notification.style.zIndex = '1000';
+                notification.style.animation = 'fadeIn 0.3s';
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.animation = 'fadeOut 0.3s';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+            }
+            
+            // অ্যানিমেশন স্টাইল যোগ করুন
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+                }
+                @keyframes fadeOut {
+                    from { opacity: 1; transform: translateX(-50%) translateY(0); }
+                    to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>
